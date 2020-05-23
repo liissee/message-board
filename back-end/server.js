@@ -2,6 +2,8 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import mongoose from 'mongoose'
+import crypto from "crypto"
+import bcrypt from 'bcrypt-nodejs'
 
 // Defines the port the app will run on. Defaults to 8080, but can be 
 // overridden when starting the server. For example:
@@ -15,20 +17,39 @@ const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/messageBoard"
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
 mongoose.Promise = Promise
 
+const User = mongoose.model('User', {
+  userName: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    unique: true,
+    required: true
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 5
+  },
+  accessToken: {
+    type: String,
+    default: () => crypto.randomBytes(128).toString('hex')
+  }
+})
 
 const Message = mongoose.model('Message', {
-  id: {
-    type: Number
-  },
   message: {
     type: String,
     required: true
   },
   parentId: {
-    type: Number,
+    type: String,
   },
   author: {
-    type: String,
+    // type: String
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
   },
   createdAt: {
     type: Date,
@@ -51,6 +72,30 @@ app.use((req, res, next) => {
 //   res.send('Hello back end')
 // })
 
+//Create user
+app.post('/users', async (req, res) => {
+  try {
+    const { userName, email, password } = req.body
+    const user = new User({ userName, email, password: bcrypt.hashSync(password) })
+    const saved = await user.save()
+    res.status(201).json(saved)
+  } catch (err) {
+    res.status(400).json({ message: 'Could not create user', errors: err.errors })
+  }
+})
+
+// Login session
+app.post('/sessions', async (req, res) => {
+  const user = await User.findOne({ userName: req.body.userName })
+  if (user && bcrypt.compareSync(req.body.password, user.password)) {
+    res.json({ userId: user._id, accessToken: user.accessToken, userName: user.userName })
+  } else {
+    //Failure because user doesn't exist or encrypted password doesn't match
+    res.status(400).json({ notFound: true })
+  }
+})
+
+
 app.get('/messages', async (req, res) => {
   let messages = await Message.find()
     .sort({ createdAt: 'desc' })
@@ -60,14 +105,14 @@ app.get('/messages', async (req, res) => {
 //POST/SEND INFORMATION IN A REQUEST
 app.post('/messages', async (req, res) => {
   //Retrieve the information sent by the client to our API endpoint
-  const { id, message, author } = req.body
+  const { message, author, parentId } = req.body
   //use our mongoose model to create the database entry
-  const postedMessage = new Message({ id, message, author })
+  const postedMessage = new Message({ message, author, parentId })
   try {
     //Success
     const savedMessage = await postedMessage.save()
     res.status(204).json(savedMessage)
-    console.log(savedMessage)
+    console.log("saved message:", savedMessage)
   } catch (err) {
     //Bad request
     res.status(400).json({ message: 'Could not save message to the database', error: err.errors })

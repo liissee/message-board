@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Timestamp } from "./Timestamp"
-import { useSelector, useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { postMessages, fetchMessages } from 'reducers/messages';
-import { Card, Button, TextField, Label } from '@material-ui/core';
+import { Card, Button, TextField } from '@material-ui/core';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import Collapse from '@material-ui/core/Collapse';
@@ -42,21 +41,17 @@ const Rotate = styled.div`
 `
 export const PostMessage = () => {
   const [message, setMessage] = useState("")
-  const [author, setAuthor] = useState("")
   const [expanded, setExpanded] = useState(false)
+
+  const author = useSelector((state) => state.users.userId)
 
   const dispatch = useDispatch();
 
-  // useEffect(() => {
-  //   dispatch(postMessages());
-  // }, [dispatch]);
-
   const handleSubmit = (event) => {
     event.preventDefault()
-    dispatch(postMessages({ message, author }))
+    dispatch(postMessages({ message, author, parentId: null }))
     dispatch(fetchMessages());
-    // setMessage("")
-    // setAuthor("")
+    //Clear inputfield
   }
 
   const handleExpandClick = () => {
@@ -78,31 +73,18 @@ export const PostMessage = () => {
         />
 
         <CardContent>
-          <Typography variant="body2" color="textSecondary" component="p">
-            <TextField
-              className="input-field"
-              label="New message"
-              id="outlined-multiline-static"
-              multiline
-              rows={4}
-              variant="outlined"
-              type="message"
-              required
-              value={message}
-              onChange={event => setMessage(event.target.value)}
-            />
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            <TextField
-              className="input-field"
-              label="Author"
-              type="author"
-              variant="outlined"
-              required
-              value={author}
-              onChange={event => setAuthor(event.target.value)}
-            />
-          </Typography>
+          <TextField
+            className="input-field"
+            label="New message"
+            id="outlined-multiline-static"
+            multiline
+            rows={4}
+            variant="outlined"
+            type="message"
+            required
+            value={message}
+            onChange={event => setMessage(event.target.value)}
+          />
           <Button variant="contained" type="submit" onClick={handleSubmit}>
             Post
         </Button>
@@ -120,8 +102,8 @@ export const PostMessage = () => {
 
         <Collapse in={expanded} timeout="auto" unmountOnExit>
           <CardContent>
-            <Typography paragraph>Replies:</Typography>
-            <Typography paragraph>
+            <Typography>Replies:</Typography>
+            <Typography>
               Heat 1/2 cup of the broth in a pot until simmering, add saffron and
               set aside for 10 minutes.
           </Typography>
@@ -129,26 +111,5 @@ export const PostMessage = () => {
         </Collapse>
       </Card>
     </Main>
-
-    // <CardContent>
-    //   Message
-    //   <Input
-    //     type="message"
-    //     required
-    //     value={message}
-    //     onChange={event => setMessage(event.target.value)}
-    //   />
-    //       Author
-    //   <Input
-    //     type="author"
-    //     required
-    //     value={author}
-    //     onChange={event => setAuthor(event.target.value)}
-    //   />
-    //   <Button type="submit" onClick={handleSubmit}>
-    //     Post
-    //     </Button>
-    // </CardContent>
-    // </Card >
   )
 }

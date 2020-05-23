@@ -4,13 +4,12 @@ import { ui } from 'reducers/ui'
 
 const initialState = {
   users: [],
-  // userName: localStorage.userName || "",
-  // accessToken: localStorage.accessToken || "",
-  // userId: localStorage.userId || ""
-  accessToken: localStorage.getItem('accessToken'),
-  userName: localStorage.getItem('userName'),
-  userId: localStorage.getItem('userId')
-
+  userName: localStorage.userName || "",
+  accessToken: localStorage.accessToken || "",
+  userId: localStorage.userId || ""
+  // accessToken: localStorage.getItem('accessToken'),
+  // userName: localStorage.getItem('userName'),
+  // userId: localStorage.getItem('userId')
 }
 
 
@@ -63,7 +62,7 @@ export const fetchUser = ({ userName, password }) => {
       })
       .then(({ accessToken, userId, userName }) => {
         console.log("acc", accessToken, "id", userId, "name", userName)
-        if (accessToken && userId) {
+        if (accessToken && userId && userName) {
           dispatch(users.actions.setAccessToken(accessToken))
           dispatch(users.actions.setUserName(userName))
           dispatch(users.actions.setUserId(userId))

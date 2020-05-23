@@ -67,6 +67,25 @@ app.use((req, res, next) => {
     res.status(503).json({ error: 'Service unavailabale' })
   }
 })
+
+// MIDDLEWARE TO CHECK ACCESSTOKEN FOR USERS (IF THE USER MATCH ANY ACCESSTOKEN IN DB)
+const authenticateUser = async (req, res, next) => {
+  try {
+    const user = await User.findOne({ accessToken: req.header('Authorization') })
+    if (user) {
+      req.user = user;
+      next()
+    } else {
+      res
+        .status(401)
+        .json({ loggedOut: true, message: 'Please try to log in again' })
+    }
+  } catch (err) {
+    res
+      .status(403)
+      .json({ message: 'accesToken missing or wrong', errors: err.errors })
+  }
+}
 // Start defining your routes here
 // app.get('/', (req, res) => {
 //   res.send('Hello back end')
@@ -136,42 +155,30 @@ app.post("/messages/:id/reply", async (req, res) => {
     res.status(400).json({ message: 'Could not save reply to the database', error: err.errors })
   }
 })
-//   try {
-//     const reply = await Message.save(
-//       { _id: req.params.id },
 
-//       { new: true }
-//     )
-//     res.json(reply)
-//   } catch (err) {
-//     res
-//       .status(400)
-//       .json({ message: "could not post your reply", errors: err.errors })
-//   }
-// })
 
-// app.post('/:id/reply', async (req, res) => {
-//   try {
-//     const { userId, comment, userName, movieId } = req.body
-//     const savedMovie = await RatedMovie.findOne({ userId: req.body.userId, movieId: req.body.movieId })
-
-//     if (savedMovie === null) {
-//       const savedMovie = new RatedMovie({ userId, movieId, comment, userName })
-//       const saved = await savedMovie.save()
-//       await User.findOneAndUpdate(
-//         { _id: userId },
-//         { $push: { movies: saved } }
-//       )
-//     }
-//     const updated = await RatedMovie.findOneAndUpdate({ userId: req.body.userId, movieId: req.body.movieId },
-//       { $push: { comments: { comment, userName } } },
-//       { new: true }
-//     )
-//     res.status(201).json(updated)
-//   } catch (err) {
-//     res.status(400).json({ message: 'Could not comment movie', errors: err.errors })
-//   }
-// })
+// Delete message
+app.delete("/messages/:id", authenticateUser)
+app.delete("/messages/:id", async (req, res) => {
+  const messageId = req.params.id
+  const { author, userId } = req.body
+  console.log("author", author)
+  console.log("userId", userId)
+  console.log("messID", messageId)
+  try {
+    const deletedMessage = await Message.findOneAndDelete({ _id: messageId, author }, { userId })
+    if (deletedMessage !== null) {
+      res.status(200).json({ message: `Successfully deleted message with id: ${deletedMessage._id}` })
+      console.log("delete", deletedMessage)
+    } else {
+      console.log("delete", deletedMessage)
+      res.status(400).json({ errorMessage: "Couldn't delete message" })
+    }
+  } catch (err) {
+    res.status(400).json({ errorMessage: "Couldn't delete message", error: err.errors })
+    console.log(err)
+  }
+})
 
 // Start the server
 app.listen(port, () => {

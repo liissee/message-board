@@ -16,6 +16,9 @@ const app = express()
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/messageBoard"
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
 mongoose.Promise = Promise
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+
 
 const User = mongoose.model('User', {
   userName: {
@@ -139,44 +142,84 @@ app.post('/messages', async (req, res) => {
 })
 
 // Finding single message and comment
-app.post("/messages/:id/reply", async (req, res) => {
-  //Retrieve the information sent by the client to our API endpoint
-  const parentId = req.params.id
-  const { message, author } = req.body
-  //use our mongoose model to create the database entry
-  const replyMessage = new Message({ message, author, parentId })
-  try {
-    //Success
-    const savedMessage = await replyMessage.save()
-    res.status(204).json(savedMessage)
-    console.log(savedMessage)
-  } catch (err) {
-    //Bad request
-    res.status(400).json({ message: 'Could not save reply to the database', error: err.errors })
-  }
-})
+// app.post("/messages/:id/reply", async (req, res) => {
+//   //Retrieve the information sent by the client to our API endpoint
+//   const parentId = req.params.id
+//   const { message, author } = req.body
+//   //use our mongoose model to create the database entry
+//   const replyMessage = new Message({ message, author, parentId })
+//   try {
+//     //Success
+//     const savedMessage = await replyMessage.save()
+//     res.status(204).json(savedMessage)
+//     console.log(savedMessage)
+//   } catch (err) {
+//     //Bad request
+//     res.status(400).json({ message: 'Could not save reply to the database', error: err.errors })
+//   }
+// })
 
 
 // Delete message
 app.delete("/messages/:id", authenticateUser)
 app.delete("/messages/:id", async (req, res) => {
   const messageId = req.params.id
-  const { author, userId } = req.body
-  console.log("author", author)
-  console.log("userId", userId)
-  console.log("messID", messageId)
-  try {
-    const deletedMessage = await Message.findOneAndDelete({ _id: messageId, author }, { userId })
-    if (deletedMessage !== null) {
-      res.status(200).json({ message: `Successfully deleted message with id: ${deletedMessage._id}` })
-      console.log("delete", deletedMessage)
-    } else {
-      console.log("delete", deletedMessage)
-      res.status(400).json({ errorMessage: "Couldn't delete message" })
+  const author = req.body.author
+  const userId = req.body.userId
+
+  if (author === userId) {
+    // console.log(req.body)
+    // console.log("author", author)
+    // console.log("userId", userId)
+    // console.log("messID", messageId)
+    try {
+      const deletedMessage = await Message.findOneAndDelete({ _id: messageId, author })
+      if (deletedMessage !== null) {
+        res.status(200).json({ message: `Successfully deleted message with id: ${deletedMessage._id}` })
+        console.log("delete1", deletedMessage)
+      } else {
+        console.log("delete2", deletedMessage)
+        res.status(400).json({ errorMessage: "Couldn't delete message" })
+      }
+    } catch (err) {
+      res.status(400).json({ errorMessage: "Couldn't delete message", error: err.errors })
+      console.log(err)
     }
-  } catch (err) {
-    res.status(400).json({ errorMessage: "Couldn't delete message", error: err.errors })
-    console.log(err)
+  }
+  else {
+    res.status(400).json({ errorMessage: "Couldn't delete someone else's message" })
+    // console.log("not your comment")
+  }
+})
+
+
+// PUT ROUTE FOR SPECIFIC message ID
+app.put("/messages/:id", authenticateUser)
+app.put('/messages/:id', async (req, res) => {
+  const messageId = req.params.id
+  const author = req.body.author
+  const userId = req.body.userId
+
+  if (author === userId) {
+    try {
+      const editedMessage = await Message.findOneAndUpdate({ _id: messageId }, req.body, { new: true })
+      // res.status(201).json(editedMessage)
+      // console.log(editedMessage)
+
+      if (editedMessage !== null) {
+        res.status(201).json(editedMessage)
+        // res.status(201).json({ message: `Successfully edited message with id: ${editedMessage._id}` })
+        console.log("Editmessage", editedMessage)
+      } else {
+        res.status(400).json({ errorMessage: "Couldn't edit message" })
+        console.log("Editmessage2", editedMessage)
+      }
+    } catch (err) {
+      res.status(400).json({ errorMessage: "Couldn't edit message", error: err.errors })
+      console.log("3", err)
+    }
+  } else {
+    res.status(400).json({ errorMessage: "Couldn't edit someone else's message" })
   }
 })
 
@@ -184,3 +227,5 @@ app.delete("/messages/:id", async (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`)
 })
+
+

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { fetchMessages } from 'reducers/messages';
-import { Card } from '@material-ui/core';
+import { Card, Button } from '@material-ui/core';
 import styled from 'styled-components'
-import { PostMessage } from './PostMessage';
-import { ReplyMessage } from './ReplyMessage';
+import { PostReply } from './PostReply';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import Collapse from '@material-ui/core/Collapse';
@@ -13,23 +12,29 @@ import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { Timestamp } from 'components/Timestamp'
+import { DeleteMessage } from './DeleteMessage';
+import { EditMessage } from './EditMessage';
 
 const Main = styled.div`
-display: flex;
+/* display: flex;
 flex-direction: column;
 justify-content: center;
-align-items: center;
+align-items: center; */
 & {
 .messageCard {
   margin: 10px;
   width: 400px;
+  }
+.replyContainer {
+  padding: 0px;
+  padding-bottom: 0;
+  margin: 0px;
 }
+.replyCard {
+  border: lightgrey solid 1px;
+  }
 }
 `
-// const Card = styled.div`
-// width: 400px;
-// /* border: 1px solid lightgrey; */
-// `
 
 const Rotate = styled.div`
 & {
@@ -44,37 +49,39 @@ const Rotate = styled.div`
 `
 
 export const ShowMessages = (props) => {
-  const [expanded, setExpanded] = useState(false)
-  // const [selectedPost, setSelectedPost] = useState({})
+  const [expanded, setExpanded] = useState(true)
 
   const dispatch = useDispatch();
 
-  const handleExpandClick = () => {
-    setExpanded(!expanded);
-  };
 
   useEffect(() => {
     dispatch(fetchMessages());
   }, [dispatch]);
 
+
+  const userName = useSelector((state) => state.users.userName)
   const messages = useSelector((state) => state.messages.messages)
-  console.log(messages)
 
-  // const handleExpandClick = e => {
-  //   e.preventDefault();
-  //   // const currentID = e.currentTarget.id;
-  //   console.log(messages._id)
-  //   const newExpandedState = expanded[messages._id] = !expanded[messages._id];
-  //   // setIsOpen(newExpandedState);
-  //   setExpanded(newExpandedState);
-  // };
+  // const childMessages: IMessage[] = messages.filter(
+  //   (message: IMessage) => message.parentId === currentMessage.id
+  // );
 
+
+
+  const handleExpandClick = () => {
+    setExpanded(!expanded);
+  };
+
+
+  // const selectedMessageId = messages._id;
+  // const isMessageSelected = messages._id === selectedMessageId;
+  // console.log("id", messages._id)
+  // console.log("selecetd", isMessageSelected)
 
   return (
     <Main>
-      <PostMessage />
-      {messages.map((message) => (
-        <Card className="messageCard" key={message._id} >
+      {messages.map((message, index) => (
+        <Card className="messageCard" key={message._id} selected={index}>
           <CardHeader
             avatar={
               <Avatar aria-label="author">
@@ -84,50 +91,48 @@ export const ShowMessages = (props) => {
             title={message.author}
             subheader={<Timestamp createdAt={message.createdAt} />}
           />
+          <DeleteMessage id={message._id} author={message.author} />
+          <EditMessage id={message._id} author={message.author} />
           <CardContent>
-            <Typography variant="body2" color="textSecondary" component="p">
+            <Typography variant="body2" color="textSecondary">
               Message: {message.message}
-              <ReplyMessage id={message._id} />
             </Typography>
+            <PostReply parentId={message._id} />
+            {/* <ToggleComments parentId={message._id} /> */}
           </CardContent>
           <Rotate>
             <IconButton
-              // toggleOpen={expanded[message._id]}
               className={expanded ? "expandOpen" : "expand"}
               onClick={handleExpandClick}
+              // onClick={() => setExpanded({ expanded: index })}
+              // selected={this.determineItemStyle(i)}
               aria-expanded={expanded}
               aria-label="show more"
             >
               <ExpandMoreIcon />
             </IconButton>
           </Rotate>
-
           <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <CardContent>
-              <Typography paragraph>Replies:</Typography>
-              <Typography paragraph>
-                Heat 1/2 cup of the broth in a pot until simmering, add saffron and
-                set aside for 10 minutes.
-          </Typography>
+            <CardContent className="replyContainer">
+              {message.children && message.children.length && message.children.length > 0 && message.children.map((reply) => (
+                <CardContent key={reply._id} className="replyCard">
+                  <CardHeader
+                    avatar={
+                      <Avatar aria-label="author">
+                        R
+                  </Avatar>
+                    }
+                    title={userName}
+                    subheader={<Timestamp createdAt={reply.createdAt} />}
+                  />
+                  <Typography variant="body2" color="textSecondary">{reply.message}</Typography>
+                </CardContent>
+              ))}
             </CardContent>
           </Collapse>
         </Card>
-      ))}
+      ))
+      }
     </Main>
-
-
-    // <MessageBox>
-    //   <PostMessage />
-
-    //   {messages.map((message) => (
-    //     <Card className="messageCard" key={message._id}>
-    //       <div>Message: {message.message}</div>
-    //       <div>Author: {message.author}</div>
-    //       <div>Time: {message.createdAt}</div>
-    //       <ReplyMessage id={message._id} />
-
-    //     </Card>
-    //   ))}
-    // </MessageBox>
   )
 }

@@ -2,68 +2,55 @@ import React, { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { postMessages, fetchMessages } from 'reducers/messages';
 import { TextField, Button } from '@material-ui/core';
-import styled from 'styled-components'
+import styled from 'styled-components/macro'
 
-const Form = styled.div`
-  padding: 10px;
-  margin-top: 10px;
-  display: flex;
-  flex-direction:column;
-`
-const RepliesWrapper = styled.div`
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  font-size: 10px;
+const Main = styled.div`
+  & {
+.postMessage {
+  margin: 10px;
+  }
+.input-field {
+  width: 100%;
+  background: #f1f1f1;
+  margin-bottom: 5px;
+  }
+}
 `
 
 export const PostReply = ({ parentId }) => {
   const [message, setMessage] = useState("")
-  // const [author, setAuthor] = useState("")
   const dispatch = useDispatch();
 
-  // const messages = useSelector((state) => state.messages.messages)
   const author = useSelector((state) => state.users.userId)
-
-  // console.log(parentId)
+  const accessToken = useSelector((state) => state.users.accessToken)
 
   const handleSubmit = (event) => {
     event.preventDefault()
     dispatch(postMessages({ message, author, parentId }))
     dispatch(fetchMessages());
-    //Clear inputfield
+    setMessage("")
   }
 
   return (
-    <div>
-      <Form>
+    <Main>
+      <div className="postMessage">
         <TextField
+          color="secondary"
           className="input-field"
           label="New comment"
           id="outlined-multiline-static"
           multiline
-          rows={2}
+          rows={1}
           variant="outlined"
           type="message"
           required
           value={message}
           onChange={event => setMessage(event.target.value)}
         />
-        {/* <TextField
-          className="input-field"
-          label="Author"
-          id="outlined-multiline-static"
-          variant="outlined"
-          type="author"
-          required
-          value={author}
-          onChange={event => setAuthor(event.target.value)}
-        /> */}
-      </Form>
-
-      <Button variant="contained" type="submit" onClick={handleSubmit}>
-        Post comment
+        <Button size="small" disabled={!accessToken} variant="contained" type="submit" onClick={handleSubmit}>
+          Post reply
         </Button>
-    </div>
+      </div>
+    </Main>
   )
 }

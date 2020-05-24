@@ -11,8 +11,8 @@ export const messages = createSlice({
       state.messages = action.payload
     },
     setPostedMessage: (state, action) => {
-      //  state = action.payload
-      state.message.push(action.payload)
+      // state.messages = action.payload
+      state.messages.push(action.payload)
     },
     deleteMessage: (state, action) => {
       // Filter out all message but the message with matching id
@@ -37,6 +37,7 @@ export const messages = createSlice({
 //GET MESSAGES
 export const fetchMessages = () => {
   return dispatch => {
+    dispatch(ui.actions.setLoading(true))
     fetch('http://localhost:8080/messages')
       .then((res) => res.json())
       .then((json) => {
@@ -53,9 +54,10 @@ export const fetchMessages = () => {
             return nestedMessages[root].children;
           }(json, null);
           dispatch(messages.actions.setMessage(replies));
-          console.log(replies)
+          dispatch(ui.actions.setLoading(false))
         } else {
           dispatch(messages.actions.setMessage(json));
+          dispatch(ui.actions.setLoading(false))
         }
       });
   };
@@ -65,21 +67,51 @@ export const fetchMessages = () => {
 //POST MESSAGES
 export const postMessages = ({ message, author, parentId }) => {
   return dispatch => {
+    const accessToken = localStorage.getItem('accessToken')
     fetch("http://localhost:8080/messages", {
       method: "POST",
       body: JSON.stringify({ message, author, parentId }),
-      headers: { "Content-Type": "application/json" }
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: accessToken
+      }
     })
-      .then(res => {
+      .then(res => res.json())
+      .then((json) => {
         console.log("author", author)
-        dispatch(messages.actions.setPostedMessage(message, author, parentId));
-        dispatch(messages.actions.setMessage(message));
+        console.log("json post", json)
+        dispatch(messages.actions.setPostedMessage(json));
+        // dispatch(messages.actions.setMessage(json));
       })
       .catch(() => {
         console.log("Failed to post message")
       })
   }
 };
+// //POST MESSAGES
+// export const postMessages = ({ message, author, parentId }) => {
+//   return dispatch => {
+//     const accessToken = localStorage.getItem('accessToken')
+//     // dispatch(ui.actions.setLoading(true))
+//     fetch("http://localhost:8080/messages", {
+//       method: "POST",
+//       body: JSON.stringify({ message, author, parentId }),
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: accessToken
+//       }
+//     })
+//       .then(res => {
+//         console.log("author", author)
+//         dispatch(messages.actions.setPostedMessage(message, author, parentId));
+//         // dispatch(messages.actions.setMessage(message));
+//         dispatch(ui.actions.setLoading(false))
+//       })
+//       .catch(() => {
+//         console.log("Failed to post message")
+//       })
+//   }
+// };
 
 // DELETE MESSAGE
 export const deleteMessages = ({ id, author }) => {
@@ -98,9 +130,15 @@ export const deleteMessages = ({ id, author }) => {
       }
     })
       .then(() => {
-        dispatch(messages.actions.deleteMessage({ id, author, userId }))
-        console.log(id, author, userId)
-        dispatch(ui.actions.setLoading(false))
+        if (author === userId) {
+          dispatch(messages.actions.deleteMessage(id))
+          dispatch(ui.actions.setLoading(false))
+          dispatch(ui.actions.setErrorMessage(false))
+        } else {
+          console.log("not your message")
+          dispatch(ui.actions.setLoading(false))
+          dispatch(ui.actions.setErrorMessage(true))
+        }
       })
   }
 }
@@ -127,25 +165,3 @@ export const editMessages = ({ id, author, newValue }) => {
       })
   }
 }
-// //EDIT MESSAGE
-// export const editMessages = ({ id, author, newValue }) => {
-//   return dispatch => {
-//     dispatch(ui.actions.setLoading(true))
-//     const accessToken = localStorage.getItem('accessToken')
-//     const userId = localStorage.getItem('userId')
-//     fetch(`http://localhost:8080/messages/${id}`, {
-//       method: 'PUT',
-//       body: JSON.stringify({ id, author, userId, message: newValue }),
-//       headers: {
-//         'Content-Type': 'application/json',
-//         Authorization: accessToken
-//       }
-//     })
-//       .then((res) => res.json())
-//       .then((json) => {
-//         console.log("2", id, author, userId, {message: newValue})
-//         dispatch(messages.actions.editMessage({ id, author, userId, message: newValue }))
-//         dispatch(ui.actions.setLoading(false))
-//       })
-//   }
-// }

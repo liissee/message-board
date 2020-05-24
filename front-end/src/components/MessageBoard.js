@@ -1,31 +1,31 @@
 import React from 'react'
-// import { messages } from 'reducers/messages'
-// import { ui } from 'reducers/ui'
-// import { users } from 'reducers/users'
 import { ShowMessages } from 'components/ShowMessages'
 import { PostMessage } from 'components/PostMessage'
-import styled from 'styled-components'
-import { Registration } from 'components/Registration'
-import { Login } from 'components/Login'
-import { useSelector } from 'react-redux'
-import { Logout } from './Logout'
+import styled from 'styled-components/macro'
 import { Header } from './Header'
 
-
-const Main = styled.div`
+const Flex = styled.div`
 /* display: flex;
+flex-direction: row;
+justify-content: flex-start;
+align-items: flex-start; */
+`
+const Main = styled.div`
+display: flex;
 flex-direction: column;
 justify-content: center;
-align-items: center; */
+align-items: center;
 `
 
 export const MessageBoard = () => {
 
   return (
-    <Main>
+    <Flex>
       <Header />
-      <PostMessage />
-      <ShowMessages />
-    </Main >
+      <Main>
+        <PostMessage />
+        <ShowMessages />
+      </Main>
+    </Flex>
   )
 }

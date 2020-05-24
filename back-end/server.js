@@ -50,7 +50,6 @@ const Message = mongoose.model('Message', {
     type: String,
   },
   author: {
-    // type: String
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   },
@@ -90,9 +89,9 @@ const authenticateUser = async (req, res, next) => {
   }
 }
 // Start defining your routes here
-// app.get('/', (req, res) => {
-//   res.send('Hello back end')
-// })
+app.get('/', (req, res) => {
+  res.send('Hello message board')
+})
 
 //Create user
 app.post('/users', async (req, res) => {
@@ -121,10 +120,12 @@ app.post('/sessions', async (req, res) => {
 app.get('/messages', async (req, res) => {
   let messages = await Message.find()
     .sort({ createdAt: 'desc' })
+    .limit(100)
   res.status(200).json(messages)
 })
 
 //POST/SEND INFORMATION IN A REQUEST
+app.post("/messages/:id", authenticateUser)
 app.post('/messages', async (req, res) => {
   //Retrieve the information sent by the client to our API endpoint
   const { message, author, parentId } = req.body
@@ -141,25 +142,6 @@ app.post('/messages', async (req, res) => {
   }
 })
 
-// Finding single message and comment
-// app.post("/messages/:id/reply", async (req, res) => {
-//   //Retrieve the information sent by the client to our API endpoint
-//   const parentId = req.params.id
-//   const { message, author } = req.body
-//   //use our mongoose model to create the database entry
-//   const replyMessage = new Message({ message, author, parentId })
-//   try {
-//     //Success
-//     const savedMessage = await replyMessage.save()
-//     res.status(204).json(savedMessage)
-//     console.log(savedMessage)
-//   } catch (err) {
-//     //Bad request
-//     res.status(400).json({ message: 'Could not save reply to the database', error: err.errors })
-//   }
-// })
-
-
 // Delete message
 app.delete("/messages/:id", authenticateUser)
 app.delete("/messages/:id", async (req, res) => {
@@ -168,17 +150,11 @@ app.delete("/messages/:id", async (req, res) => {
   const userId = req.body.userId
 
   if (author === userId) {
-    // console.log(req.body)
-    // console.log("author", author)
-    // console.log("userId", userId)
-    // console.log("messID", messageId)
     try {
       const deletedMessage = await Message.findOneAndDelete({ _id: messageId, author })
       if (deletedMessage !== null) {
         res.status(200).json({ message: `Successfully deleted message with id: ${deletedMessage._id}` })
-        console.log("delete1", deletedMessage)
       } else {
-        console.log("delete2", deletedMessage)
         res.status(400).json({ errorMessage: "Couldn't delete message" })
       }
     } catch (err) {
@@ -188,7 +164,6 @@ app.delete("/messages/:id", async (req, res) => {
   }
   else {
     res.status(400).json({ errorMessage: "Couldn't delete someone else's message" })
-    // console.log("not your comment")
   }
 })
 
@@ -203,9 +178,6 @@ app.put('/messages/:id', async (req, res) => {
   if (author === userId) {
     try {
       const editedMessage = await Message.findOneAndUpdate({ _id: messageId }, req.body, { new: true })
-      // res.status(201).json(editedMessage)
-      // console.log(editedMessage)
-
       if (editedMessage !== null) {
         res.status(201).json(editedMessage)
         // res.status(201).json({ message: `Successfully edited message with id: ${editedMessage._id}` })

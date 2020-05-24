@@ -1,10 +1,23 @@
 import React, { useState } from 'react'
 import { Button, TextField } from '@material-ui/core'
-import styled from 'styled-components'
+import styled from 'styled-components/macro'
 
+const Main = styled.div`
+width: 350px;
+padding: 10px;
+& {
+  .buttons {
+    margin-top: 5px;
+    display: flex; 
+    justify-content: space-between;
+  }
+  .text {
+    font-size: 13px;
+  }
+}
+`
 
-
-export const Registration = () => {
+export const Registration = ({ handleClick }) => {
   const [userName, setUserName] = useState("")
   const [password, setPassword] = useState("")
   const [email, setEmail] = useState("")
@@ -36,23 +49,25 @@ export const Registration = () => {
   }
 
   return (
-    <div>
+    <Main>
       {registred &&
-        <div color={"#fff"}>Success! Continuing to login...</div>
+        <div className="text">Your account has been created. Please log in with your user name.</div>
       }
       {!registred && (
         <div>
-          {!failure && <div>CREATE NEW USER</div>}
+          {!failure && <div className="text">Please create an account to post a message</div>}
           {failure && (
-            <div>
+            <div className="text">
               User not created. Try using another name or email!
             </div>
           )}
           {userName.length < 2 && userName.length !== 0 && " is too short"}
           {userName.length > 20 && " is too long"}
           <TextField
+            color="secondary"
+            size="small"
             variant="outlined"
-            margin="normal"
+            margin="dense"
             id="name"
             label="User name"
             name="name"
@@ -64,8 +79,10 @@ export const Registration = () => {
           ></TextField>
 
           <TextField
+            color="secondary"
             variant="outlined"
-            margin="normal"
+            margin="dense"
+            size="small"
             required
             fullWidth
             id="email"
@@ -79,42 +96,47 @@ export const Registration = () => {
           <div>
             {password.length < 5 && password.length !== 0 && " is too short"}
             <TextField
+              color="secondary"
               variant="outlined"
-              margin="normal"
+              margin="dense"
               required
               fullWidth
               name="password"
               label="Password"
               type="password"
               id="password"
+              size="small"
               value={password}
               onChange={event => setPassword(event.target.value)}
             ></TextField>
           </div>
-          <Button
-            variant="contained"
-            color="primary"
-            type="submit"
-            disabled={
-              userName.length > 1 &&
-                userName.length < 21 &&
-                password.length > 4 &&
-                email
-                ? false
-                : true
-            }
-            onClick={handleSubmit}
-          >
-            SIGN UP
+          <div className="buttons">
+            <Button
+              variant="contained"
+              color="secondary"
+              type="submit"
+              size="small"
+              disabled={
+                userName.length > 1 &&
+                  userName.length < 21 &&
+                  password.length > 4 &&
+                  email
+                  ? false
+                  : true
+              }
+              onClick={handleSubmit}
+            >
+              SIGN UP
             </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            type="button" onClick={reDirect}>
-            Already a member?
+            <Button
+              size="small"
+              variant="contained"
+              type="button" onClick={handleClick}>
+              Already a member?
             </Button>
+          </div>
         </div>
       )}
-    </div>
+    </Main>
   )
 }

@@ -5,7 +5,7 @@ export const ui = createSlice({
   initialState: {
     isLoading: false,
     isLoginFailed: false,
-    errorMessage: false,
+    errorMessage: false
   },
   reducers: {
     setLoading: (state, action) => {

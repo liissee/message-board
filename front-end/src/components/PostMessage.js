@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { postMessages, fetchMessages } from 'reducers/messages';
 import { Card, Button, TextField } from '@material-ui/core';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
-import Collapse from '@material-ui/core/Collapse';
 import Avatar from '@material-ui/core/Avatar';
-import IconButton from '@material-ui/core/IconButton';
-import Typography from '@material-ui/core/Typography';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import styled from 'styled-components'
+import styled from 'styled-components/macro'
 
 const Main = styled.div`
 & {
@@ -17,33 +13,22 @@ const Main = styled.div`
   background: #f1f1f1;
   margin: 10px;
   width: 400px;
-}
+  }
 .avatar {
   background: black;
-}
+  }
 .input-field{
   width: 100%;
-  margin: 5px;
-}
-}
-`
-
-const Rotate = styled.div`
-& {
-  .expand {
-    transform: rotate(0deg);
-    margin-left: auto;
-  }
-  .expandOpen {
-    transform: rotate(180deg);
+  margin-bottom: 5px;
   }
 }
 `
 export const PostMessage = () => {
-  const [message, setMessage] = useState("")
-  const [expanded, setExpanded] = useState(false)
+  const [message, setMessage] = useState()
 
+  // save the logged in userId to author in User mongoose model.
   const author = useSelector((state) => state.users.userId)
+  const accessToken = useSelector((state) => state.users.accessToken)
 
   const dispatch = useDispatch();
 
@@ -51,13 +36,8 @@ export const PostMessage = () => {
     event.preventDefault()
     dispatch(postMessages({ message, author, parentId: null }))
     dispatch(fetchMessages());
-    //Clear inputfield
+    setMessage("")
   }
-
-  const handleExpandClick = () => {
-    setExpanded(!expanded);
-  };
-
 
   return (
     <Main>
@@ -74,6 +54,7 @@ export const PostMessage = () => {
 
         <CardContent>
           <TextField
+            color="secondary"
             className="input-field"
             label="New message"
             id="outlined-multiline-static"
@@ -85,30 +66,10 @@ export const PostMessage = () => {
             value={message}
             onChange={event => setMessage(event.target.value)}
           />
-          <Button variant="contained" type="submit" onClick={handleSubmit}>
+          <Button variant="contained" disabled={!accessToken} type="submit" onClick={handleSubmit}>
             Post
         </Button>
         </CardContent>
-        <Rotate>
-          <IconButton
-            className={expanded ? "expandOpen" : "expand"}
-            onClick={handleExpandClick}
-            aria-expanded={expanded}
-            aria-label="show more"
-          >
-            <ExpandMoreIcon />
-          </IconButton>
-        </Rotate>
-
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
-          <CardContent>
-            <Typography>Replies:</Typography>
-            <Typography>
-              Heat 1/2 cup of the broth in a pot until simmering, add saffron and
-              set aside for 10 minutes.
-          </Typography>
-          </CardContent>
-        </Collapse>
       </Card>
     </Main>
   )

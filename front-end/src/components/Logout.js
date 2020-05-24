@@ -1,7 +1,7 @@
 import React from 'react'
 import { useDispatch } from 'react-redux'
 import { users } from '../reducers/users'
-import styled from 'styled-components'
+// import styled from 'styled-components/macro'
 import { Button } from '@material-ui/core'
 
 
@@ -19,7 +19,7 @@ export const Logout = () => {
   return (
     <Button
       variant="contained"
-      color="primary"
+      color="secondary"
       onClick={handleLogout}>
       Sign out
     </Button>
